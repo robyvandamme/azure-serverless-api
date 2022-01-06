@@ -32,6 +32,8 @@ public class PostMessageTests
         var result = await client.SendAsync(request);
 
         result.StatusCode.Should().Be(HttpStatusCode.Created);
+        result.Headers.Location.Should().NotBeNull();
+        result.Headers.Location.ToString().Should().StartWith("http://localhost:7071/api/messages/");
     }
 
     [Fact]

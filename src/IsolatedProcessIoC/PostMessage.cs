@@ -1,5 +1,9 @@
+using System;
+using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using IsolatedProcessIoC.Handlers;
 using IsolatedProcessIoC.Models;
 using IsolatedProcessIoC.Responses;
@@ -8,6 +12,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace IsolatedProcessIoC
 {
@@ -39,22 +44,39 @@ namespace IsolatedProcessIoC
                 var errorResponse = req.CreateResponse(HttpStatusCode.UnprocessableEntity);
                 return new MultiResponse()
                 {
-                    Messages = null,
+                    QueueMessages = null,
                     HttpResponse = errorResponse
                 };
             }
 
-            var response = req.CreateResponse();
-            // TODO: add location header
-            await response.WriteAsJsonAsync(message, HttpStatusCode.Created).ConfigureAwait(false);
+            SaveMessageToBlobStorage(message);
 
+            var response = req.CreateResponse();
+            response.Headers.Add("Location", $@"http://localhost:7071/api/messages/{message.Id.ToString()}");
+            await response.WriteAsJsonAsync(message, HttpStatusCode.Created).ConfigureAwait(false);
             var multiResponse = new MultiResponse()
             {
-                Messages = new[] { message },
+                QueueMessages = new[] { message },
                 HttpResponse = response
             };
 
             return multiResponse;
+        }
+
+        private static void SaveMessageToBlobStorage(Message message)
+        {
+            var messageJson = JsonConvert.SerializeObject(message);
+
+            // TODO: use IOC
+            var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+            var serviceClient = new BlobServiceClient(connectionString);
+            var containerClient = serviceClient.GetBlobContainerClient("messages");
+            containerClient.CreateIfNotExists();
+            var blobClient = containerClient.GetBlobClient(message.Id.ToString());
+            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(messageJson)))
+            {
+                blobClient.Upload(stream);
+            }
         }
     }
 }

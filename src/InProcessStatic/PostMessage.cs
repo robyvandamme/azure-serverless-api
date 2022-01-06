@@ -16,6 +16,7 @@ namespace InProcessStatic
         [FunctionName("PostMessage")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "messages")] HttpRequest req,
+            [Queue("outqueue"),StorageAccount("AzureWebJobsStorage")] ICollector<Message> msg,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request");
@@ -28,6 +29,9 @@ namespace InProcessStatic
             {
                 return new UnprocessableEntityResult();
             }
+
+            // adds the message to the queue
+            msg.Add(message);
 
             return new CreatedResult(new Uri($"http://localhost:7071/api/messages/{message.Id.ToString()}"), message);
         }

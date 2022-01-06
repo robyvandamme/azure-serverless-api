@@ -2,6 +2,7 @@ using System.Net;
 using System.Threading.Tasks;
 using IsolatedProcessIoC.Handlers;
 using IsolatedProcessIoC.Models;
+using IsolatedProcessIoC.Responses;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
@@ -26,7 +27,7 @@ namespace IsolatedProcessIoC
         [OpenApiResponseWithoutBody(HttpStatusCode.UnprocessableEntity, Summary = "Invalid message")]
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(NewMessage))]
         [Function("PostMessage")]
-        public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "messages")] HttpRequestData req)
+        public async Task<MultiResponse> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "messages")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request");
 
@@ -36,13 +37,24 @@ namespace IsolatedProcessIoC
             if (message == null)
             {
                 var errorResponse = req.CreateResponse(HttpStatusCode.UnprocessableEntity);
-                return errorResponse;
+                return new MultiResponse()
+                {
+                    Messages = null,
+                    HttpResponse = errorResponse
+                };
             }
 
             var response = req.CreateResponse();
             // TODO: add location header
             await response.WriteAsJsonAsync(message, HttpStatusCode.Created).ConfigureAwait(false);
-            return response;
+
+            var multiResponse = new MultiResponse()
+            {
+                Messages = new[] { message },
+                HttpResponse = response
+            };
+
+            return multiResponse;
         }
     }
 }

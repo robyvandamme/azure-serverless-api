@@ -25,7 +25,7 @@ public class PostMessageTests
         var request = new HttpRequestMessage()
         {
             Method = HttpMethod.Post,
-            RequestUri = new Uri("http://localhost:7071/api/messages")
+            RequestUri = new Uri(@TestConfiguration.FunctionUrl)
         };
 
         request.Content = new StringContent(JsonConvert.SerializeObject(newMessage), Encoding.UTF8, "application/json");
@@ -33,7 +33,7 @@ public class PostMessageTests
 
         result.StatusCode.Should().Be(HttpStatusCode.Created);
         result.Headers.Location.Should().NotBeNull();
-        result.Headers.Location.ToString().Should().StartWith("http://localhost:7071/api/messages/");
+        result.Headers.Location?.ToString().Should().StartWith(TestConfiguration.FunctionUrl);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class PostMessageTests
         var request = new HttpRequestMessage()
         {
             Method = HttpMethod.Post,
-            RequestUri = new Uri("http://localhost:7071/api/messages")
+            RequestUri = new Uri(@TestConfiguration.FunctionUrl)
         };
 
         request.Content = new StringContent(JsonConvert.SerializeObject(newMessage), Encoding.UTF8, "application/json");

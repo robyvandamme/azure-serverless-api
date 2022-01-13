@@ -1,3 +1,4 @@
+using IsolatedProcessIoC.Configuration;
 using IsolatedProcessIoC.Handlers;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Azure.Functions.Worker.Extensions.OpenApi.Extensions;
@@ -15,6 +16,7 @@ namespace IsolatedProcessIoC
                 .ConfigureServices(services =>
                 {
                     services.AddTransient<IMessageHandler, MessageHandler>();
+                    services.AddTransient<IFunctionConfiguration, FunctionConfiguration>();
                 })
                 .Build();
 

@@ -38,7 +38,8 @@ namespace InProcessStatic
 
             SaveMessageToBlobStorage(containerClient, message);
 
-            return new CreatedResult(new Uri($"http://localhost:7071/api/messages/{message.Id.ToString()}"), message);
+            var functionUrl = Environment.GetEnvironmentVariable("FunctionUrl");
+            return new CreatedResult(new Uri($"{functionUrl}/{message.Id.ToString()}"), message);
         }
 
         private static void SaveMessageToBlobStorage(BlobContainerClient containerClient, Message message)

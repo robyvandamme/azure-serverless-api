@@ -8,6 +8,7 @@
     "OpenApi__DocTitle": "Isolated Process IoC",
     "OpenApi__DocVersion": "1.0.0",
     "OpenApi__ForceHttps": "false",
-    "OpenApi__ForceHttp": "true"
+    "OpenApi__ForceHttp": "true",
+    "FunctionUrl": "http://localhost:7071/api/messages"
   }
 }

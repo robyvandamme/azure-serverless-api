@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
+using IsolatedProcessIoC.Configuration;
 using IsolatedProcessIoC.Handlers;
 using IsolatedProcessIoC.Models;
 using IsolatedProcessIoC.Responses;
@@ -19,11 +20,16 @@ namespace IsolatedProcessIoC
     public class PostMessage
     {
         private readonly IMessageHandler _messageHandler;
+        private readonly IFunctionConfiguration _functionConfiguration;
         private readonly ILogger _logger;
 
-        public PostMessage(ILoggerFactory loggerFactory, IMessageHandler messageHandler)
+        public PostMessage(
+            ILoggerFactory loggerFactory,
+            IMessageHandler messageHandler,
+            IFunctionConfiguration functionConfiguration)
         {
             _messageHandler = messageHandler;
+            _functionConfiguration = functionConfiguration;
             _logger = loggerFactory.CreateLogger<PostMessage>();
         }
 
@@ -52,7 +58,7 @@ namespace IsolatedProcessIoC
             SaveMessageToBlobStorage(message);
 
             var response = req.CreateResponse();
-            response.Headers.Add("Location", $@"http://localhost:7071/api/messages/{message.Id.ToString()}");
+            response.Headers.Add("Location", $@"{_functionConfiguration.FunctionUrl}/{message.Id.ToString()}");
             await response.WriteAsJsonAsync(message, HttpStatusCode.Created).ConfigureAwait(false);
             var multiResponse = new MultiResponse()
             {
